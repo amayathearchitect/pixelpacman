@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Pac-Man Game</title>
+    <meta property="og:title" content="Pixel Pac-Man Game">
+    <meta property="og:description" content="Check out my high score in this awesome 3D Pac-Man game!">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/000000/FFFF00?text=Pixel+Pac-Man">
+    <meta property="og:url" content="https://pixelpacman.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000;
+            font-family: 'Press Start 2P', cursive;
+        }
+        canvas { display: block; }
+        #score-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #FFFF00;
+            font-size: 18px;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 10;
+        }
+        #level-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #FFFF00;
+            font-size: 18px;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 10;
+        }
+        #power-timer {
+            position: absolute;
+            top: 50px;
+            left: 20px;
+            height: 10px;
+            background-color: #0000FF;
+            box-shadow: 0 0 10px #0000FF;
+            transition: width 0.1s linear;
+            display: none;
+            z-index: 10;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFFF00;
+            font-size: 32px;
+            text-align: center;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border: 4px solid #FFFF00;
+            box-shadow: 0 0 20px #FFFF00;
+            z-index: 100;
+        }
+        #restart-button, .game-button {
+            padding: 15px 25px;
+            font-size: 16px;
+            margin-top: 30px;
+            cursor: pointer;
+            background-color: #FFFF00;
+            color: #000;
+            border: none;
+            font-family: 'Press Start 2P', cursive;
+            box-shadow: 0 4px 0 #AA7700;
+            transition: all 0.2s;
+        }
+        #restart-button:hover, .game-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #AA7700;
+        }
+        #leaderboard-button {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFFF00;
+            font-size: 14px;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 10;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: 'Press Start 2P', cursive;
+            padding: 5px;
+        }
+        #leaderboard-button:hover {
+            color: #FFFFFF;
+        }
+        #leaderboard-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFFF00;
+            font-size: 18px;
+            text-align: center;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border: 4px solid #FFFF00;
+            box-shadow: 0 0 20px #FFFF00;
+            z-index: 100;
+            min-width: 400px;
+        }
+        #leaderboard-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+            text-align: left;
+        }
+        #leaderboard-list li {
+            padding: 10px;
+            margin: 5px 0;
+            border-bottom: 2px solid #FFFF00;
+            display: flex;
+            justify-content: space-between;
+        }
+        #name-input-container {
+            display: none;
+            margin-top: 20px;
+        }
+        #player-name {
+            background-color: #000;
+            border: 2px solid #FFFF00;
+            color: #FFFF00;
+            padding: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #FFFF00;
+            font-size: 20px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .share-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .share-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #000;
+            text-decoration: none;
+            font-size: 0;
+            position: relative;
+        }
+        .twitter {
+            background-color: #000000;
+        }
+        .facebook {
+            background-color: #4267B2;
+        }
+        .whatsapp {
+            background-color: #25D366;
+        }
+        .copy-link {
+            background-color: #FFFFFF;
+        }
+        /* Pixel art icons for share buttons */
+        .share-button::before {
+            content: "";
+            display: block;
+            width: 24px;
+            height: 24px;
+            background-color: currentColor;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            -webkit-mask-size: contain;
+        }
+        .twitter::before {
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4,4 L8,4 L8,8 L4,8 L4,4 Z M8,8 L12,8 L12,12 L8,12 L8,8 Z M12,12 L16,12 L16,16 L12,16 L12,12 Z M16,8 L20,8 L20,12 L16,12 L16,8 Z M16,16 L20,16 L20,20 L16,20 L16,16 Z M4,16 L8,16 L8,20 L4,20 L4,16 Z'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4,4 L8,4 L8,8 L4,8 L4,4 Z M8,8 L12,8 L12,12 L8,12 L8,8 Z M12,12 L16,12 L16,16 L12,16 L12,12 Z M16,8 L20,8 L20,12 L16,12 L16,8 Z M16,16 L20,16 L20,20 L16,20 L16,16 Z M4,16 L8,16 L8,20 L4,20 L4,16 Z'/%3E%3C/svg%3E");
+            color: white;
+        }
+        .facebook::before {
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2,2 L2,22 L22,22 L22,2 L2,2 Z M16,7 L14,7 C13.4,7 13,7.4 13,8 L13,10 L16,10 L16,13 L13,13 L13,20 L10,20 L10,13 L8,13 L8,10 L10,10 L10,7.5 C10,5.6 11.6,4 13.5,4 L16,4 L16,7 Z'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2,2 L2,22 L22,22 L22,2 L2,2 Z M16,7 L14,7 C13.4,7 13,7.4 13,8 L13,10 L16,10 L16,13 L13,13 L13,20 L10,20 L10,13 L8,13 L8,10 L10,10 L10,7.5 C10,5.6 11.6,4 13.5,4 L16,4 L16,7 Z'/%3E%3C/svg%3E");
+            color: white;
+        }
+        .whatsapp::before {
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4,4 L20,4 L20,16 L16,16 L12,20 L12,16 L4,16 Z M8,8 L8,12 L16,12 L16,8 Z'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4,4 L20,4 L20,16 L16,16 L12,20 L12,16 L4,16 Z M8,8 L8,12 L16,12 L16,8 Z'/%3E%3C/svg%3E");
+            color: white;
+        }
+        .copy-link::before {
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8,2 L8,8 L2,8 L2,22 L16,22 L16,16 L22,16 L22,2 L8,2 Z M14,10 L14,20 L4,20 L4,10 L14,10 Z M20,4 L20,14 L16,14 L16,8 L10,8 L10,4 L20,4 Z'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8,2 L8,8 L2,8 L2,22 L16,22 L16,16 L22,16 L22,2 L8,2 Z M14,10 L14,20 L4,20 L4,10 L14,10 Z M20,4 L20,14 L16,14 L16,8 L10,8 L10,4 L20,4 Z'/%3E%3C/svg%3E");
+            color: black;
+        }
+        #copy-confirmation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #FFFF00;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        /* Start Game Screen Styles */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #game-title {
+            color: #FFFF00;
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #FFFF00;
+            animation: pulse 1.5s infinite alternate;
+        }
+        @keyframes pulse {
+            from { text-shadow: 0 0 10px #FFFF00; }
+            to { text-shadow: 0 0 20px #FFFF00, 0 0 30px #FF0000; }
+        }
+        #game-container {
+            display: none;
+        }
+        #instructions-panel {
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 4px solid #FFFF00;
+            box-shadow: 0 0 20px #FFFF00;
+            padding: 30px;
+            max-width: 800px;
+            width: 80%;
+            color: #FFFFFF;
+            font-size: 14px;
+            margin-bottom: 30px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        #instructions-panel h2 {
+            color: #FFFF00;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instruction-section {
+            margin-bottom: 20px;
+        }
+        .instruction-section h3 {
+            color: #FFFF00;
+            margin-bottom: 10px;
+        }
+        .instruction-section p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .key-control {
+            display: inline-block;
+            background-color: #333;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        .power-up-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .power-up-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 15px;
+            background-color: #FFFF00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .blue-icon {
+            background-color: #0000FF;
+        }
+        .cyan-icon {
+            background-color: #00FFFF;
+        }
+        .magenta-icon {
+            background-color: #FF00FF;
+        }
+        .level-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background-color: #333;
+            color: #FFFF00;
+            border: 2px solid #FFFF00;
+            padding: 10px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+        }
+        .tab-button.active {
+            background-color: #FFFF00;
+            color: #000;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #start-button {
+            padding: 20px 40px;
+            font-size: 24px;
+            background-color: #FFFF00;
+            color: #000;
+            border: none;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #AA7700;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+        #start-button:hover {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #AA7700;
+        }
+        .ghost-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .red-ghost {
+            background-color: #FF0000;
+        }
+        .pink-ghost {
+            background-color: #FFB8FF;
+        }
+        .cyan-ghost {
+            background-color: #00FFFF;
+        }
+        .orange-ghost {
+            background-color: #FFB852;
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1 id="game-title">PIXEL PAC-MAN</h1>
+        <div id="instructions-panel">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="how-to-play">HOW TO PLAY</button>
+                <button class="tab-button" data-tab="power-ups">POWER-UPS</button>
+                <button class="tab-button" data-tab="levels">LEVELS</button>
+            </div>
+            
+            <div id="how-to-play" class="tab-content active">
+                <div class="instruction-section">
+                    <h3>OBJECTIVE</h3>
+                    <p>Navigate through the maze, eat all the pellets, and avoid the ghosts to advance through 3 levels and win the game!</p>
+                </div>
+                
+                <div class="instruction-section">
+                    <h3>CONTROLS</h3>
+                    <p>Use the arrow keys or WASD to move Pac-Man:</p>
+                    <p><span class="key-control">↑</span> or <span class="key-control">W</span> - Move Up</p>
+                    <p><span class="key-control">→</span> or <span class="key-control">D</span> - Move Right</p>
+                    <p><span class="key-control">↓</span> or <span class="key-control">S</span> - Move Down</p>
+                    <p><span class="key-control">←</span> or <span class="key-control">A</span> - Move Left</p>
+                </div>
+                
+                <div class="instruction-section">
+                    <h3>SCORING</h3>
+                    <p>• Small Pellet: 10 points</p>
+                    <p>• Power Pellet: 50 points</p>
+                    <p>• Special Power-Up: 100 points</p>
+                    <p>• Ghost: 200 points</p>
+                </div>
+                
+                <div class="instruction-section">
+                    <h3>GHOSTS</h3>
+                    <p>Four ghosts patrol the maze:</p>
+                    <p><span class="ghost-preview red-ghost"></span> Blinky (Red)</p>
+                    <p><span class="ghost-preview pink-ghost"></span> Pinky (Pink)</p>
+                    <p><span class="ghost-preview cyan-ghost"></span> Inky (Cyan)</p>
+                    <p><span class="ghost-preview orange-ghost"></span> Clyde (Orange)</p>
+                    <p>When you eat a Power Pellet, ghosts turn blue and can be eaten for points!</p>
+                </div>
+            </div>
+            
+            <div id="power-ups" class="tab-content">
+                <div class="instruction-section">
+                    <h3>POWER PELLETS</h3>
+                    <div class="power-up-item">
+                        <div class="power-up-icon">P</div>
+                        <div>
+                            <p>Eating a Power Pellet makes ghosts vulnerable for a limited time. Vulnerable ghosts turn blue and can be eaten for 200 points each.</p>
+                            <p>The power timer at the top of the screen shows how much time is left. When it flashes, the power is about to end!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="instruction-section">
+                    <h3>SPECIAL POWER-UPS</h3>
+                    <p>Each level has a unique special power-up:</p>
+                    
+                    <div class="power-up-item">
+                        <div class="power-up-icon cyan-icon">S</div>
+                        <div>
+                            <p><strong>Speed Boost (Level 1)</strong></p>
+                            <p>Doubles Pac-Man's movement speed for 8 seconds, helping you outrun ghosts and collect pellets faster.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="power-up-item">
+                        <div class="power-up-icon magenta-icon">M</div>
+                        <div>
+                            <p><strong>Food Magnet (Level 2)</strong></p>
+                            <p>Automatically collects all food pellets within a 2-unit radius for 8 seconds, helping you clear the maze faster.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="power-up-item">
+                        <div class="power-up-icon cyan-icon">F</div>
+                        <div>
+                            <p><strong>Ghost Freeze (Level 3)</strong></p>
+                            <p>Completely freezes all ghosts in place for 8 seconds, giving you time to navigate the maze safely.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="levels" class="tab-content">
+                <div class="instruction-section">
+                    <h3>LEVEL PROGRESSION</h3>
+                    <p>The game has 3 levels with increasing difficulty. Complete all 3 to win!</p>
+                    
+                    <div class="level-info">
+                        <span><strong>Level 1 (Blue)</strong></span>
+                        <span>Easy</span>
+                    </div>
+                    <p>• Slow ghosts</p>
+                    <p>• Long power mode duration (10 seconds)</p>
+                    <p>• Special Power: Speed Boost</p>
+                    
+                    <div class="level-info">
+                        <span><strong>Level 2 (Green)</strong></span>
+                        <span>Medium</span>
+                    </div>
+                    <p>• Faster ghosts</p>
+                    <p>• Medium power mode duration (8 seconds)</p>
+                    <p>• Special Power: Food Magnet</p>
+                    
+                    <div class="level-info">
+                        <span><strong>Level 3 (Red)</strong></span>
+                        <span>Hard</span>
+                    </div>
+                    <p>• Very fast ghosts</p>
+                    <p>• Short power mode duration (6 seconds)</p>
+                    <p>• Special Power: Ghost Freeze</p>
+                </div>
+                
+                <div class="instruction-section">
+                    <h3>LEADERBOARD</h3>
+                    <p>Your score is saved to the leaderboard when you complete the game or when game over occurs.</p>
+                    <p>Compete with friends to get the highest score!</p>
+                </div>
+            </div>
+        </div>
+        <button id="start-button">START GAME</button>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <div id="score-container">SCORE: <span id="score">0</span></div>
+        <div id="level-display">LEVEL: <span id="current-level">1</span></div>
+        <div id="power-timer"></div>
+        <button id="leaderboard-button">LEADERBOARD</button>
+        <div id="game-over">
+            GAME OVER<br>
+            <div id="name-input-container">
+                <p>Enter your name for the leaderboard:</p>
+                <input type="text" id="player-name" maxlength="15" placeholder="YOUR NAME">
+                <button id="save-score" class="game-button">SAVE SCORE</button>
+            </div>
+            <div class="share-buttons">
+                <a class="share-button twitter" title="Share on Twitter"></a>
+                <a class="share-button facebook" title="Share on Facebook"></a>
+                <a class="share-button whatsapp" title="Share on WhatsApp"></a>
+                <a class="share-button copy-link" title="Copy Link"></a>
+            </div>
+            <button id="restart-button">RESTART</button>
+        </div>
+        <div id="leaderboard-panel">
+            <button class="close-button">X</button>
+            <h2>HIGH SCORES</h2>
+            <ul id="leaderboard-list"></ul>
+            <button id="close-leaderboard" class="game-button">CLOSE</button>
+        </div>
+        <div id="copy-confirmation">Link copied to clipboard!</div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Start screen functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Start game button
+            document.getElementById('start-button').addEventListener('click', () => {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-container').style.display = 'block';
+                initGame();
+            });
+        });
+        
+        // Initialize game only after start button is clicked
+        function initGame() {
+            // Game state variables
+            let score = 0;
+            let gameOver = false;
+            let powerMode = false;
+            let powerModeTimer = null;
+            let powerModeTimeLeft = 0;
+            let mouthOpen = true;
+            let mouthAngle = 0;
+            let currentLevel = 1;
+            let levelCompleted = false;
+            let specialPowerActive = false;
+            let specialPowerType = null;
+            let specialPowerTimer = null;
+            let leaderboardVisible = false;
+            
+            // Level-specific variables
+            let ghostSpeed = 400; // Starting ghost speed (ms)
+            let pacmanSpeed = 250; // Starting pacman speed (ms)
+            let ghostDirectionChangeProb = 0.15; // Starting probability
+            let powerModeDuration = 10000; // Starting power mode duration (ms)
+            let ghostRespawnTime = 3000; // Starting ghost respawn time (ms)
+            
+            // Level-specific colors and themes
+            const levelThemes = {
+                1: {
+                    wallBaseColor: 0x0000AA,
+                    wallMiddleColor: 0x0000FF,
+                    wallInnerColor: 0x4444FF,
+                    floorColor: 0x000033,
+                    floorPatternColor: 0x000066,
+                    specialPowerType: 'speed'
+                },
+                2: {
+                    wallBaseColor: 0x006600,
+                    wallMiddleColor: 0x00AA00,
+                    wallInnerColor: 0x00FF00,
+                    floorColor: 0x003300,
+                    floorPatternColor: 0x004400,
+                    specialPowerType: 'magnet'
+                },
+                3: {
+                    wallBaseColor: 0x660000,
+                    wallMiddleColor: 0xAA0000,
+                    wallInnerColor: 0xFF0000,
+                    floorColor: 0x330000,
+                    floorPatternColor: 0x440000,
+                    specialPowerType: 'ghost_freeze'
+                }
+            };
+
+            // Define the maze layout (1 = wall, 0 = path, 2 = power pellet)
+            const maze = [
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+                [1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1],
+                [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+                [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ];
+
+            // Set power pellet positions
+            maze[1][1] = 2; // Top-left
+            maze[1][13] = 2; // Top-right
+            maze[9][1] = 2; // Bottom-left
+            // Bottom-right already set
+
+            // Initialize Three.js components
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+
+            // Camera setup
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(7, 10, 15);
+            camera.lookAt(7, 0, 5);
+
+            // Renderer setup
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x222222);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -15;
+            directionalLight.shadow.camera.right = 15;
+            directionalLight.shadow.camera.top = 15;
+            directionalLight.shadow.camera.bottom = -15;
+            scene.add(directionalLight);
+
+            // Create grid texture for floor
+            function createFloorTexture() {
+                const gridSize = 64;
+                const gridCanvas = document.createElement('canvas');
+                gridCanvas.width = gridSize;
+                gridCanvas.height = gridSize;
+                const gridContext = gridCanvas.getContext('2d');
+                
+                const theme = levelThemes[currentLevel];
+                
+                // Draw grid pattern
+                gridContext.fillStyle = `#${theme.floorColor.toString(16).padStart(6, '0')}`;
+                gridContext.fillRect(0, 0, gridSize, gridSize);
+                gridContext.fillStyle = `#${theme.floorPatternColor.toString(16).padStart(6, '0')}`;
+                gridContext.fillRect(0, 0, gridSize/2, gridSize/2);
+                gridContext.fillRect(gridSize/2, gridSize/2, gridSize/2, gridSize/2);
+                
+                return new THREE.CanvasTexture(gridCanvas);
+            }
+
+            // Create wall texture
+            function createWallTexture() {
+                const wallCanvas = document.createElement('canvas');
+                wallCanvas.width = 32;
+                wallCanvas.height = 32;
+                const wallContext = wallCanvas.getContext('2d');
+                
+                const theme = levelThemes[currentLevel];
+                
+                // Draw wall pattern
+                wallContext.fillStyle = `#${theme.wallBaseColor.toString(16).padStart(6, '0')}`;
+                wallContext.fillRect(0, 0, 32, 32);
+                wallContext.fillStyle = `#${theme.wallMiddleColor.toString(16).padStart(6, '0')}`;
+                wallContext.fillRect(1, 1, 30, 30);
+                wallContext.fillStyle = `#${theme.wallInnerColor.toString(16).padStart(6, '0')}`;
+                wallContext.fillRect(2, 2, 28, 28);
+                
+                return new THREE.CanvasTexture(wallCanvas);
+            }
+            
+            // Initialize grid texture
+            let gridTexture = createFloorTexture();
+            gridTexture.wrapS = THREE.RepeatWrapping;
+            gridTexture.wrapT = THREE.RepeatWrapping;
+            gridTexture.repeat.set(maze[0].length, maze.length);
+
+            // Create floor
+            const floorGeometry = new THREE.PlaneGeometry(maze[0].length, maze.length);
+            const floorMaterial = new THREE.MeshBasicMaterial({ 
+                map: gridTexture,
+                side: THREE.DoubleSide 
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = Math.PI / 2;
+            floor.position.set(maze[0].length / 2 - 0.5, -0.5, maze.length / 2 - 0.5);
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Create walls, food pellets, and power pellets
+            const walls = [];
+            const foodPellets = [];
+            const powerPellets = [];
+            const specialPowerUps = [];
+
+            // Initialize wall texture
+            let wallTexture = createWallTexture();
+            
+            const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const wallMaterial = new THREE.MeshPhongMaterial({ 
+                map: wallTexture,
+                shininess: 10
+            });
+            
+            const foodGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+            const foodMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+            
+            const powerGeometry = new THREE.SphereGeometry(0.25, 8, 8);
+            const powerMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFF00,
+                emissive: 0xFFFF00,
+                emissiveIntensity: 0.5
+            });
+            
+            // Create special power-up geometry and material
+            function createSpecialPowerUp(x, z) {
+                let geometry, material;
+                const theme = levelThemes[currentLevel];
+                
+                switch(theme.specialPowerType) {
+                    case 'speed':
+                        geometry = new THREE.TorusGeometry(0.2, 0.05, 16, 16);
+                        material = new THREE.MeshPhongMaterial({ 
+                            color: 0x00FFFF,
+                            emissive: 0x00FFFF,
+                            emissiveIntensity: 0.5,
+                            shininess: 80
+                        });
+                        break;
+                    case 'magnet':
+                        geometry = new THREE.ConeGeometry(0.15, 0.3, 8);
+                        material = new THREE.MeshPhongMaterial({ 
+                            color: 0xFF00FF,
+                            emissive: 0xFF00FF,
+                            emissiveIntensity: 0.5,
+                            shininess: 80
+                        });
+                        break;
+                    case 'ghost_freeze':
+                        geometry = new THREE.OctahedronGeometry(0.2, 0);
+                        material = new THREE.MeshPhongMaterial({ 
+                            color: 0x00FFFF,
+                            emissive: 0x00FFFF,
+                            emissiveIntensity: 0.5,
+                            shininess: 80
+                        });
+                        break;
+                }
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(x, 0, z);
+                scene.add(mesh);
+                
+                return {
+                    mesh,
+                    x,
+                    z,
+                    active: true,
+                    type: theme.specialPowerType
+                };
+            }
+
+            // Function to build the maze
+            function buildMaze() {
+                // Clear existing maze elements
+                walls.forEach(wall => scene.remove(wall));
+                foodPellets.forEach(food => scene.remove(food.mesh));
+                powerPellets.forEach(power => scene.remove(power.mesh));
+                specialPowerUps.forEach(power => scene.remove(power.mesh));
+                
+                walls.length = 0;
+                foodPellets.length = 0;
+                powerPellets.length = 0;
+                specialPowerUps.length = 0;
+                
+                // Update textures for current level
+                gridTexture = createFloorTexture();
+                gridTexture.wrapS = THREE.RepeatWrapping;
+                gridTexture.wrapT = THREE.RepeatWrapping;
+                gridTexture.repeat.set(maze[0].length, maze.length);
+                floorMaterial.map = gridTexture;
+                floorMaterial.needsUpdate = true;
+                
+                wallTexture = createWallTexture();
+                wallMaterial.map = wallTexture;
+                wallMaterial.needsUpdate = true;
+                
+                // Add special power-up for this level
+                // Choose a random empty spot for the special power-up
+                let specialPowerX, specialPowerZ;
+                do {
+                    specialPowerX = Math.floor(Math.random() * (maze[0].length - 2)) + 1;
+                    specialPowerZ = Math.floor(Math.random() * (maze.length - 2)) + 1;
+                } while (maze[specialPowerZ][specialPowerX] !== 0);
+                
+                // Create the maze elements
+                for (let z = 0; z < maze.length; z++) {
+                    for (let x = 0; x < maze[z].length; x++) {
+                        if (maze[z][x] === 1) { // Wall
+                            const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+                            wall.position.set(x, 0, z);
+                            wall.castShadow = true;
+                            wall.receiveShadow = true;
+                            scene.add(wall);
+                            walls.push(wall);
+                        } else if (maze[z][x] === 0) { // Food pellet
+                            // Skip the special power-up location
+                            if (x === specialPowerX && z === specialPowerZ) {
+                                specialPowerUps.push(createSpecialPowerUp(x, z));
+                                continue;
+                            }
+                            
+                            const food = new THREE.Mesh(foodGeometry, foodMaterial);
+                            food.position.set(x, 0, z);
+                            food.rotation.set(Math.PI/4, Math.PI/4, 0); // Rotate to make it diamond-shaped
+                            scene.add(food);
+                            foodPellets.push({ mesh: food, x, z, active: true });
+                        } else if (maze[z][x] === 2) { // Power pellet
+                            const power = new THREE.Mesh(powerGeometry, powerMaterial);
+                            power.position.set(x, 0, z);
+                            scene.add(power);
+                            powerPellets.push({ mesh: power, x, z, active: true });
+                        }
+                    }
+                }
+            }
+
+            // Create Pac-Man with mouth
+            function createPacman() {
+                // Create a group to hold all pacman parts
+                const pacmanGroup = new THREE.Group();
+                
+                // Create the main body - a more authentic Pac-Man shape
+                const pacmanGeometry = new THREE.SphereGeometry(0.4, 32, 32, 0.2, 5.8, 0, Math.PI);
+                const pacmanMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xFFFF00,
+                    shininess: 30,
+                    emissive: 0xFFAA00,
+                    emissiveIntensity: 0.3
+                });
+                const body = new THREE.Mesh(pacmanGeometry, pacmanMaterial);
+                pacmanGroup.add(body);
+                
+                // Store the geometry for animation
+                pacmanGroup.body = body;
+                pacmanGroup.originalGeometry = pacmanGeometry;
+                
+                return pacmanGroup;
+            }
+            
+            const pacman = createPacman();
+            pacman.position.set(1, 0, 1);
+            scene.add(pacman);
+
+            // Create ghost shape function
+            function createGhost(color) {
+                const ghostGroup = new THREE.Group();
+                
+                // Create the main body (upper part) - more rounded
+                const bodyGeometry = new THREE.SphereGeometry(0.4, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.7);
+                const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                    color: color,
+                    shininess: 50
+                });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 0.1;
+                ghostGroup.add(body);
+                
+                // Create the lower part (skirt) - more wavy
+                const skirtGeometry = new THREE.CylinderGeometry(0.4, 0.3, 0.3, 16, 1, true);
+                const skirt = new THREE.Mesh(skirtGeometry, bodyMaterial);
+                skirt.position.y = -0.1;
+                ghostGroup.add(skirt);
+                
+                // Create the wavy bottom - more pronounced
+                const waveCount = 6;
+                const waveDepth = 0.15;
+                const waveWidth = 0.8 / waveCount;
+                
+                for (let i = 0; i < waveCount; i++) {
+                    const waveGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                    const wave = new THREE.Mesh(waveGeometry, bodyMaterial);
+                    wave.position.set(
+                        (i - (waveCount - 1) / 2) * waveWidth * 2, 
+                        -0.25, 
+                        0
+                    );
+                    ghostGroup.add(wave);
+                }
+                
+                // Create larger, more expressive eyes
+                const eyeGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+                const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+                
+                const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                leftEye.position.set(-0.15, 0.1, 0.25);
+                ghostGroup.add(leftEye);
+                
+                const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                rightEye.position.set(0.15, 0.1, 0.25);
+                ghostGroup.add(rightEye);
+                
+                // Create pupils - larger and more expressive
+                const pupilGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+                const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF });
+                
+                const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                leftPupil.position.set(-0.15, 0.1, 0.35);
+                ghostGroup.add(leftPupil);
+                
+                const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                rightPupil.position.set(0.15, 0.1, 0.35);
+                ghostGroup.add(rightPupil);
+                
+                // Store pupils for animation
+                ghostGroup.leftPupil = leftPupil;
+                ghostGroup.rightPupil = rightPupil;
+                
+                return ghostGroup;
+            }
+
+            // Create ghosts
+            const ghostColors = [
+                0xFF0000, // Red (Blinky)
+                0xFFB8FF, // Pink (Pinky)
+                0x00FFFF, // Cyan (Inky)
+                0xFFB852  // Orange (Clyde)
+            ];
+
+            const ghosts = [];
+            const ghostStartPositions = [
+                { x: 13, z: 1 }, // Top right
+                { x: 13, z: 9 }, // Bottom right
+                { x: 1, z: 9 },  // Bottom left
+                { x: 7, z: 5 }   // Middle
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                const ghost = createGhost(ghostColors[i]);
+                ghost.originalColor = ghostColors[i];
+                
+                ghost.position.set(ghostStartPositions[i].x, 0, ghostStartPositions[i].z);
+                scene.add(ghost);
+                
+                ghosts.push({
+                    mesh: ghost,
+                    x: ghostStartPositions[i].x,
+                    z: ghostStartPositions[i].z,
+                    direction: Math.floor(Math.random() * 4), // 0: up, 1: right, 2: down, 3: left
+                    vulnerable: false,
+                    floatOffset: Math.random() * Math.PI * 2 // For floating animation
+                });
+            }
+
+            // Movement and direction variables
+            let pacmanDirection = 1; // 0: up, 1: right, 2: down, 3: left
+            let nextDirection = 1;
+            const directions = [
+                { x: 0, z: -1 }, // Up
+                { x: 1, z: 0 },  // Right
+                { x: 0, z: 1 },  // Down
+                { x: -1, z: 0 }  // Left
+            ];
+
+            // Handle keyboard input
+            document.addEventListener('keydown', (event) => {
+                switch (event.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                        nextDirection = 0;
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                        nextDirection = 1;
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                        nextDirection = 2;
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                        nextDirection = 3;
+                        break;
+                }
+            });
+
+            // Check if a move is valid (not hitting a wall)
+            function isValidMove(x, z) {
+                const gridX = Math.round(x);
+                const gridZ = Math.round(z);
+                
+                if (gridX < 0 || gridX >= maze[0].length || gridZ < 0 || gridZ >= maze.length) {
+                    return false;
+                }
+                
+                return maze[gridZ][gridX] !== 1;
+            }
+
+            // Restart button functionality
+            document.getElementById('restart-button').addEventListener('click', () => {
+                location.reload();
+            });
+
+            // Handle collision with food pellets
+            function checkFoodCollision() {
+                const pacX = Math.round(pacman.position.x);
+                const pacZ = Math.round(pacman.position.z);
+                
+                // Check regular food pellets
+                for (let i = 0; i < foodPellets.length; i++) {
+                    const food = foodPellets[i];
+                    if (food.active && food.x === pacX && food.z === pacZ) {
+                        scene.remove(food.mesh);
+                        food.active = false;
+                        score += 10;
+                        document.getElementById('score').textContent = score;
+                        
+                        // Check if all food is eaten
+                        if (foodPellets.every(f => !f.active) && powerPellets.every(p => !p.active)) {
+                            levelCompleted = true;
+                            
+                            if (currentLevel < 3) {
+                                // Advance to next level
+                                advanceToNextLevel();
+                            } else {
+                                // Player has completed all levels
+                                gameOver = true;
+                                document.getElementById('game-over').innerHTML = 'YOU WIN!<br>CONGRATULATIONS!<br><div id="name-input-container"><p>Enter your name for the leaderboard:</p><input type="text" id="player-name" maxlength="15" placeholder="YOUR NAME"><button id="save-score" class="game-button">SAVE SCORE</button></div><div class="share-buttons"><a class="share-button twitter" title="Share on Twitter"></a><a class="share-button facebook" title="Share on Facebook"></a><a class="share-button whatsapp" title="Share on WhatsApp"></a><a class="share-button copy-link" title="Copy Link"></a></div><button id="restart-button">PLAY AGAIN</button>';
+                                showGameOver();
+                                document.getElementById('restart-button').addEventListener('click', () => {
+                                    location.reload();
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Check power pellets
+                for (let i = 0; i < powerPellets.length; i++) {
+                    const power = powerPellets[i];
+                    if (power.active && power.x === pacX && power.z === pacZ) {
+                        scene.remove(power.mesh);
+                        power.active = false;
+                        score += 50;
+                        document.getElementById('score').textContent = score;
+                        
+                        // Activate power mode
+                        powerMode = true;
+                        powerModeTimeLeft = powerModeDuration; // Use level-specific duration
+                        
+                        // Show and set up the power timer
+                        const powerTimer = document.getElementById('power-timer');
+                        powerTimer.style.display = 'block';
+                        powerTimer.style.width = '200px';
+                        
+                        // Make ghosts vulnerable
+                        ghosts.forEach(ghost => {
+                            // Change ghost color to blue
+                            for (let child of ghost.mesh.children) {
+                                if (child.material && child.material.color) {
+                                    if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                        child.material.color.getHex() !== 0xFFFFFF) {
+                                        child.material.color.setHex(0x0000FF);
+                                    }
+                                }
+                            }
+                            ghost.vulnerable = true;
+                        });
+                        
+                        // Clear existing timer if there is one
+                        if (powerModeTimer) {
+                            clearTimeout(powerModeTimer);
+                        }
+                        
+                        // Set timer to end power mode
+                        powerModeTimer = setTimeout(() => {
+                            endPowerMode();
+                        }, powerModeTimeLeft);
+                    }
+                }
+                
+                // Check special power-ups
+                for (let i = 0; i < specialPowerUps.length; i++) {
+                    const specialPower = specialPowerUps[i];
+                    if (specialPower.active && specialPower.x === pacX && specialPower.z === pacZ) {
+                        scene.remove(specialPower.mesh);
+                        specialPower.active = false;
+                        score += 100;
+                        document.getElementById('score').textContent = score;
+                        
+                        // Activate special power
+                        activateSpecialPower(specialPower.type);
+                    }
+                }
+            }
+
+            // Handle collision with ghosts
+            function checkGhostCollision() {
+                const pacX = Math.round(pacman.position.x);
+                const pacZ = Math.round(pacman.position.z);
+                
+                for (let i = 0; i < ghosts.length; i++) {
+                    const ghost = ghosts[i];
+                    const ghostX = Math.round(ghost.mesh.position.x);
+                    const ghostZ = Math.round(ghost.mesh.position.z);
+                    
+                    if (pacX === ghostX && pacZ === ghostZ) {
+                        if (ghost.vulnerable) {
+                            // Eat the ghost
+                            score += 200;
+                            document.getElementById('score').textContent = score;
+                            
+                            // Reset ghost position
+                            ghost.mesh.position.set(ghostStartPositions[i].x, 0, ghostStartPositions[i].z);
+                            ghost.x = ghostStartPositions[i].x;
+                            ghost.z = ghostStartPositions[i].z;
+                            
+                            // The ghost remains vulnerable during power mode
+                            // but we'll make it temporarily invisible/inactive for a short time
+                            ghost.mesh.visible = false;
+                            
+                            // Make the ghost reappear after a short delay
+                            setTimeout(() => {
+                                ghost.mesh.visible = true;
+                                
+                                // Only reset vulnerability if power mode has ended
+                                if (!powerMode) {
+                                    ghost.vulnerable = false;
+                                    // Restore original ghost color
+                                    for (let child of ghost.mesh.children) {
+                                        if (child.material && child.material.color) {
+                                            if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                                child.material.color.getHex() !== 0xFFFFFF) {
+                                                child.material.color.setHex(ghost.mesh.originalColor);
+                                            }
+                                        }
+                                    }
+                                }
+                            }, ghostRespawnTime); // Use level-specific respawn time
+                        } else if (ghost.mesh.visible) { // Only collide with visible ghosts
+                            // Game over
+                            gameOver = true;
+                            showGameOver();
+                        }
+                    }
+                }
+            }
+
+            // Move ghosts
+            function moveGhosts() {
+                ghosts.forEach(ghost => {
+                    // Skip frozen ghosts
+                    if (ghost.frozen) return;
+                    
+                    // Choose a new direction if needed
+                    if (Math.random() < ghostDirectionChangeProb || !isValidMove( // Use level-specific probability
+                        ghost.x + directions[ghost.direction].x,
+                        ghost.z + directions[ghost.direction].z
+                    )) {
+                        // Generate array of possible directions
+                        const possibleDirections = [];
+                        for (let i = 0; i < 4; i++) {
+                            if (isValidMove(
+                                ghost.x + directions[i].x,
+                                ghost.z + directions[i].z
+                            )) {
+                                possibleDirections.push(i);
+                            }
+                        }
+                        
+                        if (possibleDirections.length > 0) {
+                            ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                        }
+                    }
+                    
+                    // Move in the chosen direction
+                    const newX = ghost.x + directions[ghost.direction].x;
+                    const newZ = ghost.z + directions[ghost.direction].z;
+                    
+                    if (isValidMove(newX, newZ)) {
+                        ghost.x = newX;
+                        ghost.z = newZ;
+                        ghost.mesh.position.set(newX, 0, newZ);
+                        
+                        // Rotate ghost to face direction
+                        const rotationY = [Math.PI, Math.PI/2, 0, -Math.PI/2][ghost.direction];
+                        ghost.mesh.rotation.y = rotationY;
+                    }
+                });
+            }
+
+            // Game loop
+            let lastTime = 0;
+            let pacmanMoveCounter = 0;
+            let ghostMoveCounter = 0;
+            let animationCounter = 0;
+
+            function animate(time) {
+                requestAnimationFrame(animate);
+                
+                if (gameOver || levelCompleted) {
+                    return;
+                }
+                
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                
+                // Animate Pac-Man's mouth
+                animationCounter += deltaTime;
+                if (animationCounter > 150) { // Slowed down from 100ms to 150ms
+                    animationCounter = 0;
+                    mouthOpen = !mouthOpen;
+                    
+                    // Update Pac-Man's mouth animation
+                    if (pacman.body) {
+                        // Remove the old geometry
+                        pacman.body.geometry.dispose();
+                        
+                        // Create new geometry with different mouth angle
+                        const mouthAngle = mouthOpen ? 0.8 : 0.2;
+                        const newGeometry = new THREE.SphereGeometry(0.4, 32, 32, mouthAngle, 5.5, 0, Math.PI);
+                        
+                        // Apply the new geometry
+                        pacman.body.geometry = newGeometry;
+                    }
+                }
+                
+                // Rotate Pac-Man based on direction
+                const rotationY = [Math.PI, Math.PI/2, 0, -Math.PI/2][pacmanDirection];
+                pacman.rotation.y = rotationY;
+                
+                // Animate ghosts (floating effect)
+                ghosts.forEach(ghost => {
+                    ghost.floatOffset += deltaTime * 0.001; // Slowed down from 0.002 to 0.001
+                    ghost.mesh.position.y = 0.1 + Math.sin(ghost.floatOffset) * 0.1;
+                    
+                    // Animate ghost eyes to look in movement direction
+                    if (ghost.mesh.leftPupil && ghost.mesh.rightPupil) {
+                        const eyeOffset = 0.05;
+                        const directionOffsets = [
+                            { x: 0, z: -eyeOffset }, // Up
+                            { x: eyeOffset, z: 0 },  // Right
+                            { x: 0, z: eyeOffset },  // Down
+                            { x: -eyeOffset, z: 0 }  // Left
+                        ];
+                        
+                        ghost.mesh.leftPupil.position.x = -0.15 + directionOffsets[ghost.direction].x;
+                        ghost.mesh.leftPupil.position.z = 0.35 + directionOffsets[ghost.direction].z;
+                        
+                        ghost.mesh.rightPupil.position.x = 0.15 + directionOffsets[ghost.direction].x;
+                        ghost.mesh.rightPupil.position.z = 0.35 + directionOffsets[ghost.direction].z;
+                    }
+                });
+                
+                // Animate power pellets (pulsing effect)
+                powerPellets.forEach(power => {
+                    if (power.active) {
+                        const scale = 0.8 + 0.2 * Math.sin(time * 0.003); // Slowed down from 0.005 to 0.003
+                        power.mesh.scale.set(scale, scale, scale);
+                    }
+                });
+                
+                // Animate special power-ups
+                specialPowerUps.forEach(power => {
+                    if (power.active) {
+                        power.mesh.rotation.y += deltaTime * 0.002;
+                        power.mesh.rotation.x += deltaTime * 0.001;
+                        const hoverHeight = 0.1 + 0.05 * Math.sin(time * 0.002);
+                        power.mesh.position.y = hoverHeight;
+                    }
+                });
+                
+                // Update power mode timer
+                if (powerMode) {
+                    powerModeTimeLeft -= deltaTime;
+                    
+                    // Update the visual timer
+                    const powerTimer = document.getElementById('power-timer');
+                    const timerWidth = (powerModeTimeLeft / powerModeDuration) * 200;
+                    powerTimer.style.width = timerWidth + 'px';
+                    
+                    // Flash the timer when it's about to end
+                    const warningTime = powerModeDuration * 0.3; // Warning at 30% time remaining
+                    if (powerModeTimeLeft < warningTime) {
+                        powerTimer.style.backgroundColor = Math.floor(time / 300) % 2 === 0 ? '#0000FF' : '#FF0000'; // Slowed down flashing
+                        powerTimer.style.boxShadow = Math.floor(time / 300) % 2 === 0 ? '0 0 10px #0000FF' : '0 0 10px #FF0000';
+                        
+                        // Also flash the ghosts
+                        ghosts.forEach(ghost => {
+                            if (ghost.vulnerable && ghost.mesh.visible) {
+                                for (let child of ghost.mesh.children) {
+                                    if (child.material && child.material.color) {
+                                        if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                            child.material.color.getHex() !== 0xFFFFFF) {
+                                            // Store the original blue color to alternate with
+                                            const blueColor = 0x0000FF;
+                                            child.material.color.setHex(Math.floor(time / 300) % 2 === 0 ? blueColor : 0xFFFFFF);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
+                    // End power mode if time is up
+                    if (powerModeTimeLeft <= 0) {
+                        endPowerMode();
+                    }
+                }
+                
+                // Pacman movement (using level-specific speed)
+                pacmanMoveCounter += deltaTime;
+                if (pacmanMoveCounter > pacmanSpeed) {
+                    pacmanMoveCounter = 0;
+                    
+                    // Try to change direction if requested
+                    const newX = pacman.position.x + directions[nextDirection].x;
+                    const newZ = pacman.position.z + directions[nextDirection].z;
+                    
+                    if (isValidMove(newX, newZ)) {
+                        pacmanDirection = nextDirection;
+                    }
+                    
+                    // Move in current direction
+                    const moveX = pacman.position.x + directions[pacmanDirection].x;
+                    const moveZ = pacman.position.z + directions[pacmanDirection].z;
+                    
+                    if (isValidMove(moveX, moveZ)) {
+                        pacman.position.x = moveX;
+                        pacman.position.z = moveZ;
+                    }
+                    
+                    // Check collisions
+                    checkFoodCollision();
+                    checkGhostCollision();
+                    
+                    // Handle food magnet power-up
+                    if (specialPowerActive && specialPowerType === 'magnet') {
+                        // Attract nearby food pellets
+                        const magnetRange = 2;
+                        foodPellets.forEach(food => {
+                            if (food.active) {
+                                const dx = food.x - pacman.position.x;
+                                const dz = food.z - pacman.position.z;
+                                const distance = Math.sqrt(dx * dx + dz * dz);
+                                
+                                if (distance <= magnetRange) {
+                                    scene.remove(food.mesh);
+                                    food.active = false;
+                                    score += 10;
+                                    document.getElementById('score').textContent = score;
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                // Ghost movement (using level-specific speed)
+                ghostMoveCounter += deltaTime;
+                if (ghostMoveCounter > ghostSpeed) {
+                    ghostMoveCounter = 0;
+                    moveGhosts();
+                    checkGhostCollision();
+                }
+                
+                renderer.render(scene, camera);
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Add a function to end power mode
+            function endPowerMode() {
+                powerMode = false;
+                powerModeTimeLeft = 0;
+                
+                // Hide the power timer
+                document.getElementById('power-timer').style.display = 'none';
+                
+                // Reset all ghosts
+                ghosts.forEach(ghost => {
+                    // Reset vulnerability for all ghosts
+                    ghost.vulnerable = false;
+                    
+                    // Only update visible ghosts' colors
+                    if (ghost.mesh.visible) {
+                        // Restore original ghost color
+                        for (let child of ghost.mesh.children) {
+                            if (child.material && child.material.color) {
+                                if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                    child.material.color.getHex() !== 0xFFFFFF) {
+                                    child.material.color.setHex(ghost.mesh.originalColor);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Function to activate special powers
+            function activateSpecialPower(type) {
+                // Clear any existing special power
+                if (specialPowerActive) {
+                    deactivateSpecialPower();
+                }
+                
+                specialPowerActive = true;
+                specialPowerType = type;
+                
+                // Create special power effect message
+                const powerMessage = document.createElement('div');
+                powerMessage.style.position = 'absolute';
+                powerMessage.style.top = '80px';
+                powerMessage.style.left = '20px';
+                powerMessage.style.color = '#FFFF00';
+                powerMessage.style.fontSize = '16px';
+                powerMessage.style.textShadow = '2px 2px 0px #000';
+                powerMessage.style.zIndex = '10';
+                powerMessage.style.fontFamily = "'Press Start 2P', cursive";
+                powerMessage.id = 'special-power-message';
+                
+                // Apply the special power effect
+                switch(type) {
+                    case 'speed':
+                        // Double Pac-Man's speed
+                        pacmanSpeed = pacmanSpeed / 2;
+                        powerMessage.textContent = 'SPEED BOOST!';
+                        powerMessage.style.color = '#00FFFF';
+                        break;
+                    case 'magnet':
+                        // Attract food pellets
+                        powerMessage.textContent = 'FOOD MAGNET!';
+                        powerMessage.style.color = '#FF00FF';
+                        break;
+                    case 'ghost_freeze':
+                        // Freeze ghosts
+                        ghosts.forEach(ghost => {
+                            ghost.frozen = true;
+                        });
+                        powerMessage.textContent = 'GHOSTS FROZEN!';
+                        powerMessage.style.color = '#00FFFF';
+                        break;
+                }
+                
+                document.body.appendChild(powerMessage);
+                
+                // Set timer to end special power
+                specialPowerTimer = setTimeout(() => {
+                    deactivateSpecialPower();
+                }, 8000); // Special powers last 8 seconds
+            }
+            
+            // Function to deactivate special powers
+            function deactivateSpecialPower() {
+                if (!specialPowerActive) return;
+                
+                // Remove the special power message
+                const powerMessage = document.getElementById('special-power-message');
+                if (powerMessage) {
+                    document.body.removeChild(powerMessage);
+                }
+                
+                // Revert the special power effect
+                switch(specialPowerType) {
+                    case 'speed':
+                        // Restore Pac-Man's normal speed
+                        pacmanSpeed = pacmanSpeed * 2;
+                        break;
+                    case 'magnet':
+                        // Nothing to revert for magnet
+                        break;
+                    case 'ghost_freeze':
+                        // Unfreeze ghosts
+                        ghosts.forEach(ghost => {
+                            ghost.frozen = false;
+                        });
+                        break;
+                }
+                
+                specialPowerActive = false;
+                specialPowerType = null;
+                
+                if (specialPowerTimer) {
+                    clearTimeout(specialPowerTimer);
+                    specialPowerTimer = null;
+                }
+            }
+
+            // Function to reset the level
+            function resetLevel() {
+                // Deactivate any active special powers
+                if (specialPowerActive) {
+                    deactivateSpecialPower();
+                }
+                
+                // Rebuild the maze with the current level theme
+                buildMaze();
+                
+                // Reset Pac-Man position
+                pacman.position.set(1, 0, 1);
+                pacmanDirection = 1;
+                nextDirection = 1;
+                
+                // Reset ghosts
+                ghosts.forEach((ghost, i) => {
+                    ghost.mesh.position.set(ghostStartPositions[i].x, 0, ghostStartPositions[i].z);
+                    ghost.x = ghostStartPositions[i].x;
+                    ghost.z = ghostStartPositions[i].z;
+                    ghost.direction = Math.floor(Math.random() * 4);
+                    ghost.vulnerable = false;
+                    ghost.frozen = false;
+                    ghost.mesh.visible = true;
+                    
+                    // Reset ghost colors
+                    for (let child of ghost.mesh.children) {
+                        if (child.material && child.material.color) {
+                            if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                child.material.color.getHex() !== 0xFFFFFF) {
+                                child.material.color.setHex(ghost.mesh.originalColor);
+                            }
+                        }
+                    }
+                });
+                
+                // End power mode if active
+                if (powerMode) {
+                    endPowerMode();
+                }
+                
+                // Reset game state
+                levelCompleted = false;
+            }
+            
+            // Function to set difficulty based on level
+            function setLevelDifficulty() {
+                switch(currentLevel) {
+                    case 1: // Easy
+                        ghostSpeed = 400;
+                        pacmanSpeed = 250;
+                        ghostDirectionChangeProb = 0.15;
+                        powerModeDuration = 10000;
+                        ghostRespawnTime = 3000;
+                        break;
+                    case 2: // Medium
+                        ghostSpeed = 300;
+                        pacmanSpeed = 220;
+                        ghostDirectionChangeProb = 0.2;
+                        powerModeDuration = 8000;
+                        ghostRespawnTime = 2500;
+                        break;
+                    case 3: // Hard
+                        ghostSpeed = 200;
+                        pacmanSpeed = 200;
+                        ghostDirectionChangeProb = 0.25;
+                        powerModeDuration = 6000;
+                        ghostRespawnTime = 2000;
+                        break;
+                }
+                
+                // Update level display
+                document.getElementById('current-level').textContent = currentLevel;
+            }
+            
+            // Function to advance to next level
+            function advanceToNextLevel() {
+                if (currentLevel < 3) {
+                    currentLevel++;
+                    setLevelDifficulty();
+                    resetLevel();
+                    
+                    // Show level transition message
+                    const levelMessage = document.createElement('div');
+                    levelMessage.style.position = 'absolute';
+                    levelMessage.style.top = '50%';
+                    levelMessage.style.left = '50%';
+                    levelMessage.style.transform = 'translate(-50%, -50%)';
+                    levelMessage.style.color = '#FFFF00';
+                    levelMessage.style.fontSize = '32px';
+                    levelMessage.style.textAlign = 'center';
+                    levelMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                    levelMessage.style.padding = '30px';
+                    levelMessage.style.border = '4px solid #FFFF00';
+                    levelMessage.style.boxShadow = '0 0 20px #FFFF00';
+                    levelMessage.style.zIndex = '100';
+                    levelMessage.style.fontFamily = "'Press Start 2P', cursive";
+                    levelMessage.textContent = `LEVEL ${currentLevel}`;
+                    document.body.appendChild(levelMessage);
+                    
+                    // Remove the message after a delay
+                    setTimeout(() => {
+                        document.body.removeChild(levelMessage);
+                    }, 2000);
+                } else {
+                    // Player has completed all levels - show victory message
+                    gameOver = true;
+                    document.getElementById('game-over').innerHTML = 'YOU WIN!<br>CONGRATULATIONS!<br><div id="name-input-container"><p>Enter your name for the leaderboard:</p><input type="text" id="player-name" maxlength="15" placeholder="YOUR NAME"><button id="save-score" class="game-button">SAVE SCORE</button></div><div class="share-buttons"><a class="share-button twitter" title="Share on Twitter"></a><a class="share-button facebook" title="Share on Facebook"></a><a class="share-button whatsapp" title="Share on WhatsApp"></a><a class="share-button copy-link" title="Copy Link"></a></div><button id="restart-button">PLAY AGAIN</button>';
+                    showGameOver();
+                    document.getElementById('restart-button').addEventListener('click', () => {
+                        location.reload();
+                    });
+                    document.getElementById('name-input-container').style.display = 'block';
+                    setupLeaderboardHandlers();
+                }
+            }
+            
+            // Initialize the maze with the current level theme
+            buildMaze();
+            
+            // Initialize difficulty for level 1
+            setLevelDifficulty();
+
+            // Leaderboard functions
+            function getLeaderboard() {
+                const leaderboard = localStorage.getItem('pacmanLeaderboard');
+                return leaderboard ? JSON.parse(leaderboard) : [];
+            }
+
+            function saveToLeaderboard(name, playerScore, level) {
+                const leaderboard = getLeaderboard();
+                
+                // Add new score
+                leaderboard.push({
+                    name: name,
+                    score: playerScore,
+                    level: level,
+                    date: new Date().toISOString()
+                });
+                
+                // Sort by score (highest first)
+                leaderboard.sort((a, b) => b.score - a.score);
+                
+                // Keep only top 10
+                const topScores = leaderboard.slice(0, 10);
+                
+                // Save back to localStorage
+                localStorage.setItem('pacmanLeaderboard', JSON.stringify(topScores));
+                
+                return topScores;
+            }
+
+            function displayLeaderboard() {
+                const leaderboard = getLeaderboard();
+                const leaderboardList = document.getElementById('leaderboard-list');
+                
+                // Clear current list
+                leaderboardList.innerHTML = '';
+                
+                if (leaderboard.length === 0) {
+                    const emptyItem = document.createElement('li');
+                    emptyItem.textContent = 'No scores yet. Be the first!';
+                    leaderboardList.appendChild(emptyItem);
+                } else {
+                    // Add each score to the list
+                    leaderboard.forEach((entry, index) => {
+                        const item = document.createElement('li');
+                        
+                        const rank = document.createElement('span');
+                        rank.textContent = `${index + 1}. ${entry.name}`;
+                        
+                        const scoreInfo = document.createElement('span');
+                        scoreInfo.textContent = `${entry.score} (Lvl ${entry.level})`;
+                        
+                        item.appendChild(rank);
+                        item.appendChild(scoreInfo);
+                        leaderboardList.appendChild(item);
+                    });
+                }
+            }
+
+            function toggleLeaderboard() {
+                const leaderboardPanel = document.getElementById('leaderboard-panel');
+                
+                if (leaderboardVisible) {
+                    leaderboardPanel.style.display = 'none';
+                } else {
+                    displayLeaderboard();
+                    leaderboardPanel.style.display = 'block';
+                }
+                
+                leaderboardVisible = !leaderboardVisible;
+            }
+
+            function setupLeaderboardHandlers() {
+                // Save score button
+                const saveScoreButton = document.getElementById('save-score');
+                if (saveScoreButton) {
+                    saveScoreButton.addEventListener('click', () => {
+                        const playerName = document.getElementById('player-name').value.trim() || 'Anonymous';
+                        saveToLeaderboard(playerName, score, currentLevel);
+                        document.getElementById('name-input-container').style.display = 'none';
+                        displayLeaderboard();
+                        toggleLeaderboard();
+                    });
+                }
+                
+                // Setup share buttons
+                setupShareButtons();
+            }
+
+            function setupShareButtons() {
+                // Twitter share
+                const twitterButton = document.querySelector('.twitter');
+                twitterButton.addEventListener('click', () => {
+                    const text = `I scored ${score} points in Pixel Pac-Man! Can you beat my score?`;
+                    const url = window.location.href;
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                });
+                
+                // Facebook share
+                const facebookButton = document.querySelector('.facebook');
+                facebookButton.addEventListener('click', () => {
+                    const url = window.location.href;
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                });
+                
+                // WhatsApp share
+                const whatsappButton = document.querySelector('.whatsapp');
+                whatsappButton.addEventListener('click', () => {
+                    const text = `I scored ${score} points in Pixel Pac-Man! Can you beat my score?`;
+                    const url = window.location.href;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                });
+                
+                // Copy link
+                const copyButton = document.querySelector('.copy-link');
+                copyButton.addEventListener('click', () => {
+                    const url = window.location.href;
+                    navigator.clipboard.writeText(url).then(() => {
+                        const confirmation = document.getElementById('copy-confirmation');
+                        confirmation.style.display = 'block';
+                        setTimeout(() => {
+                            confirmation.style.display = 'none';
+                        }, 2000);
+                    });
+                });
+            }
+
+            // Event listeners for leaderboard
+            document.getElementById('leaderboard-button').addEventListener('click', toggleLeaderboard);
+            document.getElementById('close-leaderboard').addEventListener('click', toggleLeaderboard);
+            document.querySelector('.close-button').addEventListener('click', toggleLeaderboard);
+
+            // Update game over handling to show name input
+            const originalGameOver = document.getElementById('game-over').innerHTML;
+            
+            function showGameOver() {
+                document.getElementById('game-over').style.display = 'block';
+                document.getElementById('name-input-container').style.display = 'block';
+                setupLeaderboardHandlers();
+            }
+
+            // Override the checkGhostCollision function to use our new game over handling
+            const originalCheckGhostCollision = checkGhostCollision;
+            checkGhostCollision = function() {
+                const pacX = Math.round(pacman.position.x);
+                const pacZ = Math.round(pacman.position.z);
+                
+                for (let i = 0; i < ghosts.length; i++) {
+                    const ghost = ghosts[i];
+                    const ghostX = Math.round(ghost.mesh.position.x);
+                    const ghostZ = Math.round(ghost.mesh.position.z);
+                    
+                    if (pacX === ghostX && pacZ === ghostZ) {
+                        if (ghost.vulnerable) {
+                            // Eat the ghost
+                            score += 200;
+                            document.getElementById('score').textContent = score;
+                            
+                            // Reset ghost position
+                            ghost.mesh.position.set(ghostStartPositions[i].x, 0, ghostStartPositions[i].z);
+                            ghost.x = ghostStartPositions[i].x;
+                            ghost.z = ghostStartPositions[i].z;
+                            
+                            // The ghost remains vulnerable during power mode
+                            // but we'll make it temporarily invisible/inactive for a short time
+                            ghost.mesh.visible = false;
+                            
+                            // Make the ghost reappear after a short delay
+                            setTimeout(() => {
+                                ghost.mesh.visible = true;
+                                
+                                // Only reset vulnerability if power mode has ended
+                                if (!powerMode) {
+                                    ghost.vulnerable = false;
+                                    // Restore original ghost color
+                                    for (let child of ghost.mesh.children) {
+                                        if (child.material && child.material.color) {
+                                            if (child !== ghost.mesh.leftPupil && child !== ghost.mesh.rightPupil && 
+                                                child.material.color.getHex() !== 0xFFFFFF) {
+                                                child.material.color.setHex(ghost.mesh.originalColor);
+                                            }
+                                        }
+                                    }
+                                }
+                            }, ghostRespawnTime); // Use level-specific respawn time
+                        } else if (ghost.mesh.visible) { // Only collide with visible ghosts
+                            // Game over
+                            gameOver = true;
+                            showGameOver();
+                        }
+                    }
+                }
+            };
+
+            // Start the game loop
+            animate(0);
+        }
+    </script>
+</body>
+</html>
