@@ -4,7 +4,7 @@ A 3D pixel-style Pac-Man game built with Three.js. Play the classic arcade game 
 
 ## Play the Game
 
-You can play the game directly in your browser: [Play Pixel Pac-Man](https://YOUR_GITHUB_USERNAME.github.io/pixelpacman/)
+You can play the game directly in your browser: [Play Pixel Pac-Man](https://YOUR-USERNAME.github.io/pixelpacman/)
 
 ## Features
 
